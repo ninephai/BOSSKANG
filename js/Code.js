@@ -342,8 +342,8 @@ function updateItemStatus(id, checked) {
 
 // ฟังก์ชันส่งข้อความไปยัง Telegram
 function sendTelegramMessage(message) {
-  const botToken = '9163185693:AAFocU8ZLWkzxgdUyLxpdTPPfLHKfRXiOd8'; //เปลี่ยนเป็น ToKen telegram ท่าน
-  const chatId = '-1003968516192'; // chat ID Telegram
+  const botToken = '9056094469:AAEi9lP9Y7ffPKDgywmnGRHqocBzt3VhyDk'; //เปลี่ยนเป็น ToKen telegram ท่าน
+  const chatId = '-1003743409575'; // chat ID Telegram
   const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
 
   const payload = {
