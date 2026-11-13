@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Todo List - ภาระกิจรายวัน</title>
+
+  <!-- Modern Libraries -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+  <!-- DataTables -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+  <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+
+  <style>
+    :root {
+      /* Modern Executive Color Palette */
+      --primary: #4F46E5;        /* Indigo 600 */
+      --primary-hover: #4338CA;
+      --primary-light: #EEF2FF;
+      --secondary: #0EA5E9;      /* Sky 500 */
+      
+      --bg-body: #F8FAFC;        /* Slate 50 */
+      --bg-card: #FFFFFF;
+      --text-main: #0F172A;      /* Slate 900 */
+      --text-muted: #64748B;     /* Slate 500 */
+      --border-light: #E2E8F0;   /* Slate 200 */
+      
+      --success-bg: #DCFCE7; --success-text: #166534;
+      --warning-bg: #FEF9C3; --warning-text: #854D0E;
+      --danger-bg: #FEE2E2;  --danger-text: #991B1B;
+      --info-bg: #DBEAFE;    --info-text: #1E40AF;
+
+      --radius-sm: 8px;
+      --radius-md: 16px;
+      --radius-lg: 24px;
+      
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+      --shadow-glow: 0 10px 25px -5px rgba(79, 70, 229, 0.3);
+      
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body {
+      font-family: 'Kanit', sans-serif;
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      -webkit-font-smoothing: antialiased;
+      background-image: 
+        radial-gradient(at 0% 0%, hsla(253,16%,7%,0.03) 0, transparent 50%), 
+        radial-gradient(at 100% 0%, hsla(225,39%,30%,0.03) 0, transparent 50%);
+      background-attachment: fixed;
+    }
+
+    .app-container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    /* --- Header --- */
+    .app-header {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: 24px 32px;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow-md);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      position: relative;
+      overflow: hidden;
+    }
+    .app-header::before {
+      content: ''; position: absolute; top: 0; left: 0; width: 6px; height: 100%;
+      background: linear-gradient(to bottom, var(--primary), var(--secondary));
+      border-radius: 8px 0 0 8px;
+    }
+    .app-logo { display: flex; align-items: center; gap: 24px; }
+    .app-logo img {
+      width: 64px; height: 64px; border-radius: 50%; object-fit: cover;
+      box-shadow: var(--shadow-sm); border: 2px solid var(--primary-light);
+      padding: 2px; background-color: white; transition: var(--transition);
+    }
+    .app-logo img:hover { transform: scale(1.05) rotate(-2deg); }
+    .app-title {
+      font-weight: 700; font-size: 26px; margin: 0;
+      background: linear-gradient(135deg, var(--text-main), var(--primary));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+    }
+    .task-counter {
+      background: var(--primary-light); color: var(--primary);
+      border-radius: 50px; padding: 10px 24px; font-weight: 600; font-size: 16px;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+
+    /* --- Card Components --- */
+    .glass-card {
+      background: var(--bg-card); border-radius: var(--radius-lg);
+      padding: 32px; box-shadow: var(--shadow-md); margin-bottom: 24px;
+      border: 1px solid rgba(255,255,255,0.8); transition: var(--transition);
+    }
+    .glass-card:hover { box-shadow: var(--shadow-lg); }
+    .section-title {
+      font-weight: 700; font-size: 18px; color: var(--text-main);
+      margin-bottom: 24px; display: flex; align-items: center; gap: 12px;
+    }
+    .section-title i {
+      color: white; background: linear-gradient(135deg, var(--primary), var(--secondary));
+      width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+      border-radius: 10px; font-size: 18px; box-shadow: var(--shadow-sm);
+    }
+
+    /* --- Forms --- */
+    .form-control, .form-select {
+      border-radius: var(--radius-md); padding: 14px 18px;
+      border: 1px solid var(--border-light); background-color: #F8FAFC;
+      font-size: 15px; transition: var(--transition); color: var(--text-main);
+    }
+    .form-control:focus, .form-select:focus {
+      background-color: #ffffff; border-color: var(--primary);
+      box-shadow: 0 0 0 4px var(--primary-light);
+    }
+    .form-label { font-weight: 600; color: var(--text-muted); margin-bottom: 8px; font-size: 14px; }
+
+    /* --- Buttons --- */
+    .btn-primary-custom {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white; border: none; border-radius: var(--radius-md);
+      padding: 14px 24px; font-weight: 600; font-size: 16px; width: 100%;
+      transition: var(--transition); display: flex; align-items: center; justify-content: center; gap: 10px;
+      box-shadow: var(--shadow-glow);
+    }
+    .btn-primary-custom:hover {
+      transform: translateY(-2px); box-shadow: 0 15px 25px -5px rgba(79, 70, 229, 0.4); color: white;
+    }
+    .btn-outline-custom {
+      background: transparent; color: var(--text-main); border: 2px solid var(--border-light);
+      border-radius: var(--radius-md); padding: 12px 24px; font-weight: 600; width: 100%;
+      transition: var(--transition); display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .btn-outline-custom:hover { background: var(--bg-body); border-color: var(--text-muted); }
+
+    /* --- File Upload --- */
+    .file-upload-wrapper {
+      display: flex; align-items: center; gap: 12px; background: #F8FAFC;
+      padding: 10px; border-radius: var(--radius-md); border: 1px dashed #CBD5E1;
+      transition: var(--transition);
+    }
+    .file-upload-wrapper:hover { border-color: var(--primary); background: var(--primary-light); }
+    .btn-upload {
+      background: white; color: var(--text-main); padding: 10px 18px;
+      border-radius: var(--radius-sm); cursor: pointer; font-weight: 600;
+      transition: var(--transition); margin: 0; font-size: 14px;
+      border: 1px solid var(--border-light); box-shadow: var(--shadow-sm); white-space: nowrap;
+    }
+    .btn-upload:hover { border-color: var(--primary); color: var(--primary); }
+    .file-name { font-size: 14px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+
+    /* --- Datepicker Modern --- */
+    .ui-widget.ui-widget-content { border: none !important; font-family: 'Kanit', sans-serif; width: 100%; }
+    .ui-datepicker { width: 100%; padding: 0; background: transparent; }
+    .ui-datepicker-header { background: transparent !important; border: none !important; color: var(--text-main) !important; font-weight: 700 !important; padding: 10px 0 20px 0 !important; }
+    .ui-datepicker th { color: var(--text-muted); font-weight: 600; font-size: 13px; padding-bottom: 15px; }
+    .ui-state-default, .ui-widget-content .ui-state-default {
+      border: none !important; background: transparent !important; font-weight: 500 !important;
+      color: var(--text-main) !important; text-align: center !important; padding: 10px !important;
+      border-radius: 12px !important; transition: var(--transition);
+    }
+    .ui-state-hover { background: var(--primary-light) !important; color: var(--primary) !important; }
+    .ui-state-active { background: var(--primary) !important; color: white !important; font-weight: 600 !important; box-shadow: var(--shadow-md); }
+    .ui-datepicker td.has-data a { font-weight: 700 !important; color: var(--primary) !important; background: var(--primary-light) !important; position: relative; }
+    .ui-datepicker td.has-data a::after {
+      content: ''; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
+      width: 6px; height: 6px; background-color: var(--primary); border-radius: 50%;
+    }
+    .ui-datepicker td.has-data a.ui-state-active::after { background-color: white; }
+
+    /* --- Table Styles --- */
+    .table-responsive { overflow-x: auto; border-radius: var(--radius-lg); }
+    .table { margin-bottom: 0; width: 100% !important; border-collapse: separate; border-spacing: 0; }
+    .table thead th {
+      background: #F8FAFC; color: var(--text-muted); font-weight: 700; font-size: 13px;
+      text-transform: uppercase; letter-spacing: 0.5px; padding: 18px 16px;
+      border-bottom: 1px solid var(--border-light); white-space: nowrap; border-top: none;
+    }
+    .table tbody td {
+      padding: 20px 16px; vertical-align: middle; color: var(--text-main);
+      border-bottom: 1px solid var(--border-light); font-size: 15px; transition: var(--transition);
+    }
+    .table tbody tr:hover td { background-color: #F8FAFC; }
+    .table tbody tr:last-child td { border-bottom: none; }
+    .task-desc { min-width: 250px; line-height: 1.6; font-weight: 500; }
+
+    /* --- Badges --- */
+    .badge-custom {
+      padding: 8px 16px; border-radius: 50px; font-size: 13px; font-weight: 600;
+      display: inline-flex; align-items: center; justify-content: center; min-width: 110px;
+      border: 1px solid transparent; transition: var(--transition);
+    }
+    .status-no { background: var(--warning-bg); color: var(--warning-text); cursor: pointer; }
+    .status-yes { background: var(--success-bg); color: var(--success-text); cursor: pointer; }
+    .status-no:hover, .status-yes:hover { filter: brightness(0.95); transform: scale(1.05); }
+
+    .prio-high { background: var(--danger-bg); color: var(--danger-text); min-width: 80px; }
+    .prio-medium { background: var(--warning-bg); color: var(--warning-text); min-width: 80px; }
+    .prio-low { background: var(--info-bg); color: var(--info-text); min-width: 80px; }
+
+    /* --- Action Buttons (Table) --- */
+    .btn-action {
+      width: 40px; height: 40px; border-radius: 12px; display: inline-flex;
+      align-items: center; justify-content: center; border: none; transition: var(--transition);
+      cursor: pointer; text-decoration: none; margin: 0 4px; font-size: 16px;
+    }
+    .btn-file { background: var(--bg-body); color: var(--text-muted); }
+    .btn-file:hover { background: var(--border-light); color: var(--text-main); }
+    .btn-file.active { background: var(--primary-light); color: var(--primary); }
+    .btn-file.active:hover { background: #E0E7FF; }
+    .btn-edit { background: var(--bg-body); color: var(--text-muted); }
+    .btn-edit:hover { background: var(--warning-bg); color: var(--warning-text); }
+    .btn-delete { background: var(--bg-body); color: var(--text-muted); }
+    .btn-delete:hover { background: var(--danger-bg); color: var(--danger-text); }
+
+    /* --- DataTables Controls --- */
+    .dataTables_wrapper .dataTables_filter { margin-bottom: 24px; }
+    .dataTables_wrapper .dataTables_filter input {
+      border: 1px solid var(--border-light); border-radius: 50px; padding: 10px 20px;
+      margin-left: 12px; background: #F8FAFC; transition: var(--transition);
+    }
+    .dataTables_wrapper .dataTables_filter input:focus {
+      outline: none; border-color: var(--primary); background: white; box-shadow: 0 0 0 4px var(--primary-light);
+    }
+    .dataTables_wrapper .dataTables_length { margin-bottom: 24px; }
+    .dataTables_wrapper .dataTables_length select { border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 6px 12px; background: #F8FAFC; }
+    .dataTables_wrapper .dataTables_paginate { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-light); }
+    .dataTables_wrapper .dataTables_paginate .paginate_button { border-radius: 10px !important; border: none !important; padding: 8px 16px !important; margin: 0 4px !important; font-weight: 500; }
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: var(--primary) !important; color: white !important; box-shadow: var(--shadow-sm); }
+    .dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.current) { background: var(--primary-light) !important; color: var(--primary) !important; }
+
+    /* --- Modal Styles --- */
+    .modal-content { border-radius: var(--radius-lg); border: none; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+    .modal-header { border-bottom: 1px solid var(--border-light); padding: 24px 32px; background: var(--bg-card); border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+    .modal-title { font-weight: 700; color: var(--text-main); font-size: 20px;}
+    .modal-body { padding: 32px; }
+    .modal-footer { border-top: 1px solid var(--border-light); padding: 24px 32px; background: #F8FAFC; border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+
+    /* --- Loading Overlay --- */
+    .loading-overlay {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(8px);
+      display: none; align-items: center; justify-content: center; flex-direction: column;
+      z-index: 10; border-radius: var(--radius-lg);
+    }
+    .spinner-border { color: var(--primary); width: 3rem; height: 3rem; border-width: 4px;}
+
+    /* --- Mobile Responsive Rules --- */
+    @media (max-width: 992px) {
+      .app-header { flex-direction: column; text-align: center; gap: 20px; }
+      .app-logo { flex-direction: column; gap: 12px; }
+    }
+    
+    .dtr-control { cursor: pointer; text-align: center; width: 50px; }
+    .dtr-control i {
+      font-size: 16px; color: var(--text-main); background: var(--border-light); border-radius: 50%;
+      width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; transition: var(--transition);
+    }
+    tr.parent .dtr-control i { transform: rotate(180deg); color: white; background: var(--primary); }
+
+    @media (max-width: 768px) {
+      .app-container { padding: 16px; }
+      .glass-card { padding: 20px; }
+      
+      .table thead th:not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(3)),
+      .table tbody td:not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(3)) { display: none !important; }
+      .table thead th:nth-child(1), .table tbody td:nth-child(1) { display: table-cell !important; }
+      
+      .child-card {
+        background: #F8FAFC; border-radius: var(--radius-md); padding: 20px;
+        margin: 12px 0; border-left: 4px solid var(--primary); box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+      }
+      .child-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: 1px dashed var(--border-light); }
+      .child-item:last-child { border-bottom: none; }
+      .child-label { font-size: 13px; font-weight: 600; color: var(--text-muted); min-width: 90px; }
+      .child-value { font-size: 14px; font-weight: 500; color: var(--text-main); text-align: right; flex: 1; }
+      .child-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-light); }
+      
+      .modal-header, .modal-footer { padding: 16px 20px; }
+      .modal-body { padding: 20px; }
+    }
+    @media (min-width: 769px) {
+      .dtr-control-header, .dtr-control { display: none !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-container">
+    
+    <!-- Header -->
+    <header class="app-header">
+      <div class="app-logo">
+        <img src="https://img2.pic.in.th/715181193_27667857169472854_6211067307914977205_n.jpg" alt="Logo">
+        <div>
+          <h1 class="app-title">ภารกิจรายวัน TO DO LIST</h1>
+          <span class="text-muted" style="font-size: 15px; font-weight: 500;">(นายกเทศมนตรีเทศบาล)</span>
+        </div>
+      </div>
+      <div class="task-counter">
+        <i class="bi bi-list-check"></i> <span id="task-count" class="me-1">0</span> รายการ
+      </div>
+    </header>
+
+    <div class="row g-4">
+      
+      <!-- Left Sidebar (Form & Calendar) -->
+      <div class="col-xl-4 col-lg-5">
+        
+        <!-- Form Add Task -->
+        <div class="glass-card">
+          <h3 class="section-title"><i class="bi bi-plus-lg"></i> เพิ่มภารกิจใหม่</h3>
+          
+          <div class="row">
+            <div class="col-12 col-sm-6 mb-3">
+              <label class="form-label">วันที่</label>
+              <input id="todo-date" type="date" class="form-control" />
+            </div>
+            <div class="col-12 col-sm-6 mb-3">
+              <label class="form-label">เวลา</label>
+              <input id="todo-time" type="time" class="form-control" />
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">รายละเอียดภารกิจ</label>
+            <textarea id="todo-name" class="form-control" rows="2" placeholder="พิมพ์รายละเอียดกิจกรรม..."></textarea>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">ระดับความสำคัญ</label>
+            <select id="todo-priority" class="form-select">
+              <option value="กลาง">ปานกลาง (Medium)</option>
+              <option value="สูง">สูง (High)</option>
+              <option value="ต่ำ">ต่ำ (Low)</option>
+            </select>
+          </div>
+          
+          <div class="mb-4">
+            <label class="form-label">เอกสารแนบ (ถ้ามี)</label>
+            <div class="file-upload-wrapper">
+              <label for="todo-file" class="btn-upload"><i class="bi bi-cloud-upload me-2"></i> เลือกไฟล์</label>
+              <span class="file-name" id="file-name">ยังไม่ได้เลือกไฟล์</span>
+              <input id="todo-file" type="file" class="d-none" onchange="updateFileName()" />
+            </div>
+          </div>
+          
+          <button class="btn-primary-custom" onClick="addItem()">
+            <i class="bi bi-check2-circle"></i> บันทึกภารกิจ
+          </button>
+        </div>
+
+        <!-- Filter Calendar -->
+        <div class="glass-card">
+          <h3 class="section-title"><i class="bi bi-calendar3"></i> เลือกดูตามวันที่</h3>
+          <div id="calendar-filter" class="mb-4 d-flex justify-content-center"></div>
+          <button class="btn-outline-custom" onclick="renderTable()">
+            <i class="bi bi-arrow-repeat"></i> แสดงข้อมูลทั้งหมด
+          </button>
+        </div>
+      </div>
+
+      <!-- Right Main (Table) -->
+      <div class="col-xl-8 col-lg-7">
+        <div class="glass-card position-relative" style="min-height: 600px; padding: 0;">
+          
+          <!-- Loader -->
+          <div class="loading-overlay" id="loading-spinner">
+            <div class="spinner-border" role="status"></div>
+            <p class="mt-4 text-muted fw-semibold" style="font-size: 16px;">กำลังโหลดข้อมูล...</p>
+          </div>
+
+          <div class="table-responsive p-3 p-md-4">
+            <table class="table" id="todoTable">
+              <thead>
+                <tr>
+                  <th class="dtr-control-header"></th>
+                  <th>วันที่</th>
+                  <th>เวลา</th>
+                  <th>ภาระงาน</th>
+                  <th class="text-center">สถานะ</th>
+                  <th class="text-center">ความสำคัญ</th>
+                  <th class="text-center">ไฟล์</th>
+                  <th class="text-center">จัดการ</th>
+                </tr>
+              </thead>
+              <tbody class="todo-items">
+                <!-- ข้อมูลถูกสร้างผ่าน JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-pencil-square text-primary me-2"></i> แก้ไขภารกิจ</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editForm">
+            <input type="hidden" id="edit-id">
+            <div class="row">
+              <div class="col-12 col-sm-6 mb-3">
+                <label class="form-label">วันที่</label>
+                <input type="date" class="form-control" id="edit-date" required>
+              </div>
+              <div class="col-12 col-sm-6 mb-3">
+                <label class="form-label">เวลา</label>
+                <input type="time" class="form-control" id="edit-time" required>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">ภาระงาน</label>
+              <textarea class="form-control" id="edit-name" rows="3" required></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">ความสำคัญ</label>
+              <select class="form-select" id="edit-priority">
+                <option value="สูง">สูง (High)</option>
+                <option value="กลาง">ปานกลาง (Medium)</option>
+                <option value="ต่ำ">ต่ำ (Low)</option>
+              </select>
+            </div>
+            <div class="mb-0">
+              <label class="form-label">เอกสารแนบ</label>
+              <div class="file-upload-wrapper">
+                <label for="edit-file" class="btn-upload"><i class="bi bi-cloud-arrow-up me-2"></i> เปลี่ยนไฟล์</label>
+                <span class="file-name" id="edit-file-name">ไม่มีไฟล์</span>
+                <input id="edit-file" type="file" class="d-none" onchange="updateEditFileName()" />
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light rounded-pill px-4 fw-semibold" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="button" class="btn btn-primary rounded-pill px-4 fw-semibold" onclick="saveModalItem()" style="background: var(--primary); border:none;">บันทึกการแก้ไข</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // ==========================================
+    // ⚠️ นำ URL จาก Google Apps Script (Web App) ของคุณมาใส่ที่นี่
+    // ==========================================
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzUtiKexf_uyQ3pnVJhbEUxXAxPLouGX9Vp7eiGKd2TkF12jiEIC2YQAkdTm8uhyqu9/exec';
+
+    let currentData = [];
+    let dataTable = null;
+    let currentFilterDate = null;
+
+    // ฟังก์ชัน Fetch API ที่ปลอดภัยขึ้น (ป้องกัน Error จาก JSON Parsing)
+    async function callApi(action, data = {}) {
+        if (API_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
+            console.error("ยังไม่ได้ใส่ Web App URL");
+            throw new Error("ระบบอยู่ในโหมดทดสอบ (กรุณาใส่ Web App URL ที่ Code)");
+        }
+        
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // ป้องกัน CORS Preflight
+                body: JSON.stringify({ action: action, ...data })
+            });
+            
+            const textResponse = await response.text();
+            let result;
+            try {
+                result = JSON.parse(textResponse);
+            } catch (e) {
+                console.error("API ไม่ได้ส่งกลับเป็น JSON. Response:", textResponse);
+                throw new Error("การตั้งค่า Google Apps Script (doPost) ไม่ถูกต้อง");
+            }
+
+            if (result.status === 'success') {
+                return result.data;
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            console.error("API Error:", error);
+            throw error;
+        }
+    }
+
+    // Mobile Detail Card
+    function createChildRowContent(item) {
+        return `
+            <div class="child-card">
+                <div class="child-item">
+                    <span class="child-label">ภาระงาน:</span>
+                    <span class="child-value text-start">${item.name}</span>
+                </div>
+                <div class="child-item">
+                    <span class="child-label">สถานะ:</span>
+                    <span class="child-value">
+                        <span class="badge-custom ${item.checked ? 'status-yes' : 'status-no'}" 
+                              onclick="toggleStatus('${item.id}', ${!item.checked})">
+                            ${item.checked ? '<i class="bi bi-check-circle-fill me-1"></i> ดำเนินการแล้ว' : 'รอดำเนินการ'}
+                        </span>
+                    </span>
+                </div>
+                <div class="child-item">
+                    <span class="child-label">ความสำคัญ:</span>
+                    <span class="child-value">
+                        <span class="badge-custom prio-${getPriorityClass(item.priority)}">
+                            ${item.priority}
+                        </span>
+                    </span>
+                </div>
+                <div class="child-item">
+                    <span class="child-label">ไฟล์แนบ:</span>
+                    <span class="child-value">
+                        ${item.note ? `<a href="${item.note}" target="_blank" class="btn-action btn-file active"><i class="bi bi-box-arrow-up-right"></i></a>` : '-'}
+                    </span>
+                </div>
+                <div class="child-actions">
+                    <a href="#" class="btn-action btn-edit" onclick="openEditModal('${item.id}')"><i class="bi bi-pencil-fill"></i></a>
+                    <a href="#" class="btn-action btn-delete" onclick="deleteItem('${item.id}')"><i class="bi bi-trash3-fill"></i></a>
+                </div>
+            </div>
+        `;
+    }
+
+    // Initialize Calendar (ภาษาไทย)
+    $(function() {
+        $.datepicker.regional['th'] = {
+            closeText: 'ปิด', prevText: 'ย้อน', nextText: 'ถัดไป', currentText: 'วันนี้',
+            monthNames: ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน', 'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'],
+            monthNamesShort: ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.', 'ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'],
+            dayNames: ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'],
+            dayNamesShort: ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'],
+            dayNamesMin: ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'],
+            weekHeader: 'Wk', dateFormat: 'yy-mm-dd', firstDay: 0, isRTL: false, showMonthAfterYear: false, yearSuffix: ''
+        };
+        $.datepicker.setDefaults($.datepicker.regional['th']);
+
+        $("#calendar-filter").datepicker({
+            dateFormat: 'yy-mm-dd',
+            onSelect: function(dateText) { filterByDate(dateText); },
+            beforeShowDay: function(date) {
+                const dateString = $.datepicker.formatDate('yy-mm-dd', date);
+                // เช็คให้แน่ใจว่า currentData เป็น Array เสมอ
+                const hasData = Array.isArray(currentData) && currentData.some(item => item.date === dateString);
+                return [true, hasData ? 'has-data' : '', ''];
+            }
+        });
+    });
+
+    function updateCalendarWithData() {
+        setTimeout(() => { $("#calendar-filter").datepicker("refresh"); }, 100);
+    }
+
+    function showLoading() {
+        document.getElementById('loading-spinner').style.display = 'flex';
+        $('#todoTable').css('opacity', '0.3');
+    }
+
+    function hideLoading() {
+        document.getElementById('loading-spinner').style.display = 'none';
+        $('#todoTable').css('opacity', '1');
+    }
+
+    // ==========================================
+    // Fetch Data
+    // ==========================================
+    async function loadDataFromSpreadsheet() {
+        showLoading();
+        currentFilterDate = null; 
+        try {
+            const items = await callApi('getAllItems');
+            // รับประกันว่า items ต้องเป็น Array
+            currentData = Array.isArray(items) ? items : []; 
+            renderTableWithData(currentData);
+            updateCalendarWithData();
+        } catch (e) {
+            handleError(e);
+            useSampleData(); 
+        } finally {
+            hideLoading();
+        }
+    }
+
+    async function filterByDate(date) {
+        currentFilterDate = date;
+        showLoading();
+        try {
+            const items = await callApi('getItemsByDate', { date: date });
+            currentData = Array.isArray(items) ? items : [];
+            renderTableWithData(currentData);
+        } catch (e) {
+            handleError(e);
+            const filtered = Array.isArray(currentData) ? currentData.filter(item => item.date === date) : [];
+            renderTableWithData(filtered);
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // Utils
+    function formatThaiDate(dateStr) {
+        if(!dateStr) return "-";
+        const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+        const date = new Date(dateStr);
+        if(isNaN(date)) return dateStr; // Fallback ถ้ารูปแบบวันที่พัง
+        return `${date.getDate()} ${months[date.getMonth()]} ${(date.getFullYear() + 543).toString().substr(2,2)}`;
+    }
+
+    function setCurrentDate() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        
+        document.getElementById('todo-date').value = `${year}-${month}-${day}`;
+        document.getElementById('todo-time').value = `${hours}:${minutes}`;
+    }
+
+    function getPriorityClass(priority) {
+        return priority === 'สูง' ? 'high' : priority === 'ต่ำ' ? 'low' : 'medium';
+    }
+
+    // Render Table
+    function renderTableWithData(items) {
+        if (dataTable) {
+            dataTable.clear();
+            dataTable.destroy();
+        }
+
+        const tbody = document.querySelector('.todo-items');
+        tbody.innerHTML = '';
+        document.getElementById('task-count').textContent = items.length;
+        
+        items.forEach(item => {
+            const hasFile = item.note && item.note.trim().length > 0;
+            const tr = document.createElement('tr');
+            
+            // ให้คอลัมน์เป๊ะตามหัวตาราง 8 คอลัมน์ เพื่อไม่ให้ DataTables แครช
+            tr.innerHTML = `
+          <td class="dtr-control"><i class="bi bi-chevron-down"></i></td>
+          <td class="text-nowrap" data-order="${item.date}">${formatThaiDate(item.date)}</td>
+          <td class="text-muted fw-semibold text-nowrap">${item.time}</td>
+          <td><div class="task-desc">${item.name}</div></td>
+          <td class="text-center">
+        <span class="badge-custom ${item.checked ? 'status-yes' : 'status-no'}" onclick="toggleStatus('${item.id}', ${!item.checked})">
+            ${item.checked ? '<i class="bi bi-check-circle-fill me-1"></i> เรียบร้อย' : 'รอทำ'}
+        </span>
+    </td>
+    <td class="text-center">
+        <span class="badge-custom prio-${getPriorityClass(item.priority)}">${item.priority}</span>
+    </td>
+    <td class="text-center">
+        ${hasFile ? `<a href="${item.note}" target="_blank" class="btn-action btn-file active"><i class="bi bi-paperclip"></i></a>` : `<span class="btn-action btn-file" style="opacity:0.3; cursor:default;"><i class="bi bi-dash"></i></span>`}
+    </td>
+    <td class="text-center text-nowrap">
+        <button class="btn-action btn-edit" onclick="openEditModal('${item.id}')"><i class="bi bi-pencil-fill"></i></button>
+        <button class="btn-action btn-delete" onclick="deleteItem('${item.id}')"><i class="bi bi-trash3-fill"></i></button>
+    </td>
+`;
+            tbody.appendChild(tr);
+        });
+
+        dataTable = $('#todoTable').DataTable({
+            pageLength: 10,
+            lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "ทั้งหมด"]],
+            language: {
+                search: "", searchPlaceholder: "🔍 ค้นหาภารกิจ...",
+                lengthMenu: "แสดง _MENU_ รายการ",
+                info: "หน้า _PAGE_ จาก _PAGES_",
+                infoEmpty: "ไม่มีข้อมูล",
+                paginate: { previous: "«", next: "»" },
+                emptyTable: "ยังไม่มีภารกิจในวันนี้ หรือกำลังโหลดข้อมูล"
+            },
+            responsive: false, 
+            autoWidth: false,
+            order: [[1, 'desc'], [2, 'desc']],
+            columnDefs: [
+                { targets: 0, orderable: false, width: '40px', className: 'dtr-control' },
+                { targets: [4,5,6,7], orderable: false }
+            ],
+            drawCallback: function() { attachMobileEvents(); }
+        });
+    }
+
+    function attachMobileEvents() {
+        $('#todoTable tbody').off('click', 'td.dtr-control');
+        if (window.innerWidth <= 768) {
+            $('#todoTable tbody').on('click', 'td.dtr-control', function(e) {
+                const tr = $(this).closest('tr');
+                const row = dataTable.row(tr);
+                
+                if (row.child.isShown()) {
+                    row.child.hide();
+                    tr.removeClass('parent');
+                } else {
+                    const item = currentData[row.index()];
+                    if(item) {
+                        row.child(createChildRowContent(item)).show();
+                        tr.addClass('parent');
+                    }
+                }
+            });
+        }
+    }
+    
+    $(window).resize(() => attachMobileEvents());
+
+    // ==========================================
+    // API Actions 
+    // ==========================================
+    function toggleStatus(id, newStatus) {
+        const item = currentData.find(i => i.id === id);
+        if (!item) return;
+
+        if (item.checked && !newStatus) {
+            Swal.fire({
+                title: 'ยืนยันรหัสป้องกัน', input: 'password', inputPlaceholder: 'ใส่รหัส (1234)',
+                showCancelButton: true, confirmButtonText: 'ยืนยัน', cancelButtonText: 'ยกเลิก', confirmButtonColor: '#4F46E5'
+            }).then((res) => {
+                if (res.isConfirmed && res.value === '1234') execUpdateStatus(id, newStatus);
+                else if (res.isConfirmed) Swal.fire('ผิดพลาด', 'รหัสไม่ถูกต้อง', 'error');
+            });
+        } else {
+            execUpdateStatus(id, newStatus);
+        }
+    }
+
+    async function execUpdateStatus(id, newStatus) {
+        try {
+            await callApi('updateItemStatus', { id: id, checked: newStatus });
+            const idx = currentData.findIndex(i => i.id === id);
+            if (idx !== -1) currentData[idx].checked = newStatus;
+            renderTableWithData(currentData);
+        } catch(e) { 
+            Swal.fire('ข้อผิดพลาด', 'ไม่สามารถอัพเดทสถานะได้', 'error');
+        }
+    }
+
+    function addItem() {
+        const name = document.getElementById('todo-name').value.trim();
+        const date = document.getElementById('todo-date').value;
+        const time = document.getElementById('todo-time').value;
+        const priority = document.getElementById('todo-priority').value;
+        const fileInput = document.getElementById('todo-file');
+
+        if (!name || !date || !time) {
+            Swal.fire({icon: 'warning', title: 'กรอกข้อมูลไม่ครบ', text: 'โปรดระบุรายละเอียด วันที่ และเวลา', confirmButtonColor: '#4F46E5'});
+            return;
+        }
+
+        Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+        const newItem = { date, time, name, checked: false, priority, note: "", fileData: null, fileName: null };
+
+        if (fileInput.files.length > 0) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                newItem.fileData = e.target.result;
+                newItem.fileName = fileInput.files[0].name;
+                saveToAppScript(newItem);
+            };
+            reader.readAsDataURL(fileInput.files[0]);
+        } else {
+            saveToAppScript(newItem);
+        }
+    }
+
+    async function saveToAppScript(item) {
+        try {
+            const res = await callApi('saveItem', { item: item });
+            document.getElementById('todo-name').value = '';
+            document.getElementById('todo-file').value = '';
+            document.getElementById('file-name').textContent = 'ยังไม่ได้เลือกไฟล์';
+            Swal.fire({icon: 'success', title: 'บันทึกสำเร็จ', showConfirmButton: false, timer: 1500});
+            filterByDate(res.date); 
+        } catch(e) {
+            Swal.fire('ข้อผิดพลาด', e.message, 'error'); 
+        }
+    }
+
+    function openEditModal(id) {
+        const item = currentData.find(i => i.id === id);
+        if(!item) return;
+        document.getElementById('edit-id').value = item.id;
+        document.getElementById('edit-date').value = item.date;
+        document.getElementById('edit-time').value = item.time;
+        document.getElementById('edit-name').value = item.name;
+        document.getElementById('edit-priority').value = item.priority;
+        document.getElementById('edit-file-name').textContent = item.note ? 'มีไฟล์เดิม' : 'ไม่มีไฟล์';
+        new bootstrap.Modal(document.getElementById('editModal')).show();
+    }
+
+    function saveModalItem() {
+        const id = document.getElementById('edit-id').value;
+        const org = currentData.find(i => i.id === id);
+        const item = {
+            id, date: document.getElementById('edit-date').value, time: document.getElementById('edit-time').value,
+            name: document.getElementById('edit-name').value.trim(), priority: document.getElementById('edit-priority').value,
+            checked: org ? org.checked : false, note: org ? org.note : '', fileData: null, fileName: null
+        };
+
+        const fileInput = document.getElementById('edit-file');
+        Swal.fire({ title: 'กำลังอัพเดท...', didOpen: () => Swal.showLoading() });
+
+        if (fileInput.files.length > 0) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                item.fileData = e.target.result;
+                item.fileName = fileInput.files[0].name;
+                updateToAppScript(item);
+            };
+            reader.readAsDataURL(fileInput.files[0]);
+        } else {
+            updateToAppScript(item);
+        }
+    }
+
+    async function updateToAppScript(item) {
+        try {
+            const res = await callApi('updateItem', { item: item });
+            bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+            Swal.fire({icon: 'success', title: 'อัพเดทสำเร็จ', timer: 1500, showConfirmButton: false});
+            filterByDate(res.date);
+        } catch(e) { 
+            Swal.fire('ข้อผิดพลาด', e.message, 'error'); 
+        }
+    }
+
+    function deleteItem(id) {
+        Swal.fire({
+            title: 'ยืนยันการลบ?', text: "ข้อมูลนี้จะถูกลบและไม่สามารถกู้คืนได้",
+            icon: 'warning', showCancelButton: true, confirmButtonColor: '#EF4444', confirmButtonText: 'ลบข้อมูล'
+        }).then(async (res) => {
+            if (res.isConfirmed) {
+                Swal.fire({ title: 'กำลังลบ...', didOpen: () => Swal.showLoading() });
+                try {
+                    await callApi('deleteItemFromSheet', { id: id });
+                    Swal.fire({icon:'success', title:'ลบเรียบร้อย', timer: 1500, showConfirmButton: false});
+                    if (currentFilterDate) filterByDate(currentFilterDate);
+                    else loadDataFromSpreadsheet();
+                } catch(e) { 
+                    Swal.fire('ข้อผิดพลาด', e.message, 'error'); 
+                }
+            }
+        });
+    }
+
+    function updateFileName() {
+        const file = document.getElementById('todo-file').files[0];
+        document.getElementById('file-name').textContent = file ? file.name : 'ยังไม่ได้เลือกไฟล์';
+    }
+    function updateEditFileName() {
+        const file = document.getElementById('edit-file').files[0];
+        document.getElementById('edit-file-name').textContent = file ? file.name : 'ไม่มีไฟล์';
+    }
+    function renderTable() { loadDataFromSpreadsheet(); }
+
+    // ==========================================
+    // แจ้งเตือนข้อผิดพลาด & Sample Data Fallback
+    // ==========================================
+    function handleError(error) {
+        console.error("System Error Details:", error);
+        // แสดง Alert ให้เห็นชัดเจนว่าเกิดข้อผิดพลาดในการโหลดข้อมูล 
+        // ป้องกันอาการที่ตารางว่างเปล่าโดยไม่รู้สาเหตุ
+        Swal.fire({
+            icon: 'error',
+            title: 'เชื่อมต่อฐานข้อมูลล้มเหลว',
+            text: 'ไม่สามารถดึงข้อมูลจาก Google Apps Script ได้ ระบบจะแสดงข้อมูลจำลอง',
+            confirmButtonColor: '#4F46E5'
+        });
+    }
+
+    function useSampleData() {
+        currentData = [
+            { id: "1", date: new Date().toISOString().split('T')[0], time: "09:30", name: "ประชุมติดตามความก้าวหน้าโครงการ (ข้อมูลจำลอง)", checked: false, priority: "สูง", note: "#" },
+            { id: "2", date: new Date().toISOString().split('T')[0], time: "13:00", name: "ตรวจเยี่ยมชุมชนพื้นที่เขต 1 (ข้อมูลจำลอง)", checked: true, priority: "กลาง", note: "" }
+        ];
+        renderTableWithData(currentData);
+        updateCalendarWithData();
+    }
+
+    // Startup
+    document.addEventListener('DOMContentLoaded', () => {
+        setCurrentDate();
+        loadDataFromSpreadsheet();
+    });
+
+  </script>
+</body>
+</html>
